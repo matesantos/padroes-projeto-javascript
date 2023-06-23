@@ -6,15 +6,15 @@ class NegociacaoController {
     this._inputQuantidade = $('#quantidade');
     this._inputValor = $('#valor');
 
-    this._listaNegociacoes = new Bind (
+    this._listaNegociacoes = new Bind(
       new ListaNegociacoes(),
       new NegociacoesView($('#negociacoesView')),
       'adiciona', 'esvazia'
     );
 
     this._mensagem = new Bind(
-      new Mensagem(), 
-      new MensagemView($('#mensagemView')), 
+      new Mensagem(),
+      new MensagemView($('#mensagemView')),
       'texto'
     );
   }
@@ -32,6 +32,26 @@ class NegociacaoController {
     this._limpaFormulario();
   }
 
+
+  importaNegociacoes() {
+
+    let service = new NegociacaoService();
+
+    Promise.all(
+      [
+        service.obterNegociacoesDaSemana(),
+        service.obterNegociacoesDaSemanaAnterior(),
+        service.obterNegociacoesDaSemanaRetrasada()
+      ]
+    ).then(negociacoes => {
+      negociacoes
+        .reduce((arrayAchatado, array) => arrayAchatado.concat(array), [])
+        .forEach(negociacao => this._listaNegociacoes.adiciona(negociacao));
+      this._mensagem.texto = 'Negociações importadas com sucesso';
+    })
+      .catch(erro => this._mensagem.texto = erro);
+
+  }
   _criaNegociacao() {
     return new Negociacao(
       DateHelper.textoParaData(this._inputData.value),
